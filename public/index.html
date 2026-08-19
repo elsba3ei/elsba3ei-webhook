@@ -1,0 +1,1589 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>elsba3ei Webhook | Real-time Request & SSRF Inspector</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>"
+    />
+
+    <!-- Google Fonts: Instrument Sans + Playfair Display + Dancing Script + Fira Code -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Playfair+Display:ital,wght@1,400;1,500;1,600;1,700&family=Fira+Code:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome 6 & Bootstrap Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+
+    <link rel="stylesheet" href="/public/style.css" />
+    <script>
+      function switchTab(tabId) {
+        document.querySelectorAll(".tab-btn").forEach(function (b) {
+          var isActive = b.getAttribute("data-tab") === tabId;
+          b.classList.toggle("active", isActive);
+          b.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
+        document.querySelectorAll(".tab-pane").forEach(function (p) {
+          var isActive = p.id === tabId;
+          p.classList.toggle("active", isActive);
+          p.hidden = !isActive;
+        });
+      }
+      window.switchTab = switchTab;
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Top Navigation Bar -->
+      <header class="top-nav" role="banner">
+        <div class="nav-brand">
+          <div
+            class="brand-badge-icon"
+            title="elsba3ei Webhook & SSRF Inspector"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-satellite-dish"></i>
+          </div>
+          <div class="brand-text">
+            <div class="brand-title">
+              elsba3ei <span class="type-accent">Webhook</span>
+            </div>
+            <div class="brand-subtitle">Request & SSRF Inspector</div>
+          </div>
+          <div
+            id="sse-status"
+            class="status-badge connected"
+            title="Real-time Stream Connected"
+            role="status"
+            aria-live="polite"
+          >
+            <span class="status-pulse-ring" aria-hidden="true"></span>
+            <span class="status-dot" aria-hidden="true"></span>
+            <span class="status-text">LIVE</span>
+          </div>
+          <!-- Live Stream Pause / Resume Control -->
+          <button
+            id="btn-toggle-stream"
+            class="btn btn-stream-ctrl"
+            title="Pause/Resume live incoming feed (Shortcut: Space or P)"
+            aria-label="Pause or resume live stream"
+            aria-pressed="false"
+          >
+            <i
+              id="stream-ctrl-icon"
+              class="fa-solid fa-pause"
+              aria-hidden="true"
+            ></i>
+            <span id="stream-ctrl-text">Pause</span>
+          </button>
+        </div>
+
+        <!-- Unified Webhook Address & Action Bar -->
+        <div
+          class="url-command-bar"
+          role="toolbar"
+          aria-label="Webhook URL Endpoint Selector"
+        >
+          <div class="url-source-wrapper">
+            <i class="fa-solid fa-link url-prefix-icon" aria-hidden="true"></i>
+            <select
+              id="url-select"
+              class="url-source-select"
+              aria-label="Select active webhook URL host and protocol"
+            >
+              <!-- Dynamically populated via JS -->
+            </select>
+          </div>
+          <button
+            id="copy-url-btn"
+            class="btn btn-copy"
+            title="Copy active webhook URL to clipboard (Shortcut: C)"
+            aria-label="Copy active webhook URL"
+          >
+            <i class="fa-regular fa-clone copy-icon" aria-hidden="true"></i>
+            <span class="copy-text">Copy URL</span>
+          </button>
+        </div>
+
+        <!-- Header Action Controls -->
+        <div class="nav-actions" role="toolbar" aria-label="Header Actions">
+          <!-- Cloudflare 1-Click Tunnel -->
+          <button
+            id="btn-toggle-tunnel"
+            class="btn btn-tunnel"
+            title="Toggle Cloudflare Public HTTPS Tunnel"
+            aria-label="Toggle Cloudflare Public HTTPS Tunnel"
+          >
+            <i
+              id="tunnel-btn-icon"
+              class="fa-brands fa-cloudflare"
+              aria-hidden="true"
+            ></i>
+            <span id="tunnel-btn-text">Cloudflare Tunnel</span>
+          </button>
+
+          <button
+            id="btn-test-request"
+            class="btn btn-secondary"
+            title="Send a test probe (Shortcut: T)"
+            aria-label="Send test probe"
+          >
+            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+            <span>Send Test</span>
+          </button>
+
+          <button
+            id="btn-compare-modal"
+            class="btn btn-secondary"
+            title="Compare two requests side-by-side (Shortcut: D)"
+            aria-label="Compare two requests diff"
+          >
+            <i class="fa-solid fa-code-compare" aria-hidden="true"></i>
+            <span>Diff / Compare</span>
+          </button>
+
+          <button
+            id="btn-response-settings"
+            class="btn btn-secondary"
+            title="Configure Mock HTTP Response (Shortcut: M)"
+            aria-label="Configure Mock HTTP Response"
+          >
+            <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+            <span>Mock Config</span>
+          </button>
+
+          <button
+            id="btn-sound-toggle"
+            class="btn btn-icon"
+            title="Toggle audio alert on new request (Shortcut: S)"
+            aria-label="Toggle audio alert on new request"
+          >
+            <i id="sound-icon" class="fa-solid fa-bell" aria-hidden="true"></i>
+          </button>
+
+          <button
+            id="btn-shortcuts-help"
+            class="btn btn-icon"
+            title="Keyboard Shortcuts Help (?)"
+            aria-label="Open Keyboard Shortcuts Help"
+          >
+            <i class="fa-solid fa-keyboard" aria-hidden="true"></i>
+          </button>
+
+          <button
+            id="btn-export-json"
+            class="btn btn-secondary btn-icon-only"
+            title="Export Requests to JSON / HAR (Shortcut: E)"
+            aria-label="Export recorded requests to JSON"
+          >
+            <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
+          </button>
+
+          <button
+            id="btn-clear-all"
+            class="btn btn-danger btn-icon-only"
+            title="Clear all recorded requests (Shortcut: Alt+C)"
+            aria-label="Clear all recorded requests"
+          >
+            <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Workspace -->
+      <div class="main-layout">
+        <!-- Left Sidebar: Requests List -->
+        <aside
+          class="sidebar"
+          role="complementary"
+          aria-label="Captured Requests Sidebar"
+        >
+          <!-- Search & Filter Controls -->
+          <div class="sidebar-header">
+            <div class="search-box">
+              <i
+                class="fa-solid fa-magnifying-glass search-icon"
+                aria-hidden="true"
+              ></i>
+              <input
+                type="text"
+                id="request-search"
+                placeholder="Search requests (path, body, headers, IP)..."
+                aria-label="Search requests"
+              />
+              <button
+                id="btn-toggle-regex"
+                class="regex-toggle-btn"
+                title="Toggle Regex Search mode"
+                aria-label="Toggle regular expression search"
+              >
+                .*
+              </button>
+              <span
+                class="kbd-shortcut-hint"
+                title="Press Ctrl+K or / to search"
+                aria-hidden="true"
+                >Ctrl K</span
+              >
+              <button
+                id="clear-search-btn"
+                class="clear-search"
+                title="Clear Search (Esc)"
+                aria-label="Clear search input"
+              >
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <!-- HTTP Method Filter Chips -->
+            <div
+              class="method-filters"
+              role="group"
+              aria-label="Filter by HTTP Method"
+            >
+              <button
+                class="filter-btn active"
+                data-filter="ALL"
+                aria-pressed="true"
+              >
+                ALL <span id="count-all" class="badge-count">0</span>
+              </button>
+              <button
+                class="filter-btn method-get-btn"
+                data-filter="GET"
+                aria-pressed="false"
+              >
+                GET
+              </button>
+              <button
+                class="filter-btn method-post-btn"
+                data-filter="POST"
+                aria-pressed="false"
+              >
+                POST
+              </button>
+              <button
+                class="filter-btn method-put-btn"
+                data-filter="PUT"
+                aria-pressed="false"
+              >
+                PUT
+              </button>
+              <button
+                class="filter-btn method-del-btn"
+                data-filter="DELETE"
+                aria-pressed="false"
+              >
+                DEL
+              </button>
+              <button
+                class="filter-btn method-other-btn"
+                data-filter="OTHER"
+                aria-pressed="false"
+              >
+                OTHER
+              </button>
+            </div>
+
+            <!-- Status Code Filter Chips -->
+            <div
+              class="status-filters"
+              role="group"
+              aria-label="Filter by Status Code"
+            >
+              <span class="status-filter-label" aria-hidden="true"
+                >Status:</span
+              >
+              <button
+                class="status-filter-btn active"
+                data-status-filter="ALL"
+                aria-pressed="true"
+              >
+                All
+              </button>
+              <button
+                class="status-filter-btn status-2xx"
+                data-status-filter="2xx"
+                aria-pressed="false"
+              >
+                2xx
+              </button>
+              <button
+                class="status-filter-btn status-3xx"
+                data-status-filter="3xx"
+                aria-pressed="false"
+              >
+                3xx
+              </button>
+              <button
+                class="status-filter-btn status-4xx"
+                data-status-filter="4xx"
+                aria-pressed="false"
+              >
+                4xx
+              </button>
+              <button
+                class="status-filter-btn status-5xx"
+                data-status-filter="5xx"
+                aria-pressed="false"
+              >
+                5xx
+              </button>
+            </div>
+
+            <!-- Filter Summary & Quick Reset Bar -->
+            <div id="filter-summary-bar" class="filter-summary-bar">
+              <span id="filtered-count-text">Showing all requests</span>
+              <button
+                id="btn-reset-filters"
+                class="btn-text-subtle hidden"
+                title="Clear all active search and filter constraints"
+              >
+                Reset Filters
+              </button>
+            </div>
+          </div>
+
+          <!-- Stream Paused Pending Notification Banner -->
+          <div
+            id="stream-paused-banner"
+            class="stream-paused-banner hidden"
+            role="alert"
+          >
+            <div class="banner-content">
+              <i
+                class="fa-solid fa-circle-pause banner-icon"
+                aria-hidden="true"
+              ></i>
+              <span id="paused-pending-count">Feed paused (0 new items)</span>
+            </div>
+            <button id="btn-resume-and-jump" class="btn btn-xs btn-primary">
+              <span>Resume & Jump</span>
+            </button>
+          </div>
+
+          <!-- Requests Scrollable List -->
+          <div
+            id="requests-list"
+            class="requests-list"
+            role="listbox"
+            aria-label="List of captured requests"
+            tabindex="0"
+          >
+            <div class="empty-state">
+              <div class="empty-icon-wrap" aria-hidden="true">
+                <i class="fa-solid fa-tower-broadcast empty-icon-fa"></i>
+              </div>
+              <div class="empty-title">Listening for incoming requests...</div>
+              <p class="empty-desc">
+                Send HTTP or SSRF callbacks to your active Webhook URL to
+                inspect headers, JSON body, query parameters, and client network
+                origins in real time.
+              </p>
+              <button id="btn-send-first-test" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                <span>Send Test Request Probe</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sidebar Footer -->
+          <div class="sidebar-footer">
+            <label
+              class="toggle-control"
+              title="Automatically select the newest arriving request when not paused"
+            >
+              <input type="checkbox" id="auto-scroll-toggle" checked />
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Auto-select latest</span>
+            </label>
+            <span
+              id="requests-total-badge"
+              class="total-badge"
+              title="Total captured requests in memory"
+            >
+              <i class="fa-solid fa-database" aria-hidden="true"></i>
+              <span id="total-requests-count">0 requests</span>
+            </span>
+          </div>
+        </aside>
+
+        <!-- Right Detail Inspector -->
+        <main
+          class="inspector-panel"
+          role="main"
+          aria-label="Request Detail Inspector"
+        >
+          <div id="no-selection" class="no-selection-state">
+            <div class="select-prompt">
+              <div class="prompt-icon-wrap" aria-hidden="true">
+                <i
+                  class="fa-solid fa-magnifying-glass-chart prompt-icon-fa"
+                ></i>
+              </div>
+              <h3>Select a request to inspect</h3>
+              <p>
+                Captured HTTP callbacks, webhook payloads, and SSRF probes will
+                display with detailed headers, decoded body, query params, and
+                network origins.
+              </p>
+              <div class="quick-keyboard-tips">
+                <span class="tip-badge"
+                  ><kbd>J</kbd> / <kbd>K</kbd> Navigate</span
+                >
+                <span class="tip-badge"
+                  ><kbd>P</kbd> / <kbd>Space</kbd> Pause</span
+                >
+                <span class="tip-badge"><kbd>T</kbd> Send Test</span>
+                <span class="tip-badge"><kbd>R</kbd> Repeater</span>
+                <span class="tip-badge"><kbd>D</kbd> Diff</span>
+                <span class="tip-badge"><kbd>?</kbd> Shortcuts</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="request-detail" class="request-detail hidden">
+            <!-- Request Header Card -->
+            <div class="detail-header-card">
+              <div class="detail-top-row">
+                <div class="detail-method-path">
+                  <span id="detail-method" class="method-badge GET">GET</span>
+                  <span id="detail-path" class="detail-url" title="/capture"
+                    >/capture</span
+                  >
+                  <button
+                    id="copy-full-url"
+                    class="btn-icon-subtle"
+                    title="Copy Request Path"
+                    aria-label="Copy request path"
+                  >
+                    <i class="fa-regular fa-copy" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <div
+                  class="detail-actions"
+                  role="toolbar"
+                  aria-label="Request Code and Action Exporters"
+                >
+                  <button
+                    id="btn-copy-curl"
+                    class="btn btn-secondary btn-sm"
+                    title="Copy as cURL command"
+                    aria-label="Copy as cURL command"
+                  >
+                    <i class="fa-solid fa-terminal" aria-hidden="true"></i>
+                    <span>cURL</span>
+                  </button>
+                  <button
+                    id="btn-copy-fetch"
+                    class="btn btn-secondary btn-sm"
+                    title="Copy as JavaScript fetch"
+                    aria-label="Copy as JavaScript fetch"
+                  >
+                    <i class="fa-brands fa-js" aria-hidden="true"></i>
+                    <span>fetch()</span>
+                  </button>
+                  <button
+                    id="btn-copy-python"
+                    class="btn btn-secondary btn-sm"
+                    title="Copy as Python requests script"
+                    aria-label="Copy as Python requests"
+                  >
+                    <i class="fa-brands fa-python" aria-hidden="true"></i>
+                    <span>Python</span>
+                  </button>
+                  <button
+                    id="btn-copy-powershell"
+                    class="btn btn-secondary btn-sm"
+                    title="Copy as PowerShell Invoke-RestMethod"
+                    aria-label="Copy as PowerShell"
+                  >
+                    <i class="fa-solid fa-cube" aria-hidden="true"></i>
+                    <span>PowerShell</span>
+                  </button>
+                  <button
+                    id="btn-copy-raw-http"
+                    class="btn btn-secondary btn-sm"
+                    title="Copy Raw HTTP Request wire format"
+                    aria-label="Copy Raw HTTP"
+                  >
+                    <i class="fa-solid fa-code" aria-hidden="true"></i>
+                    <span>Raw HTTP</span>
+                  </button>
+                  <button
+                    id="btn-open-repeater"
+                    class="btn btn-primary btn-sm"
+                    title="Send to Repeater to resend or modify (Shortcut: R)"
+                    aria-label="Open in Repeater"
+                  >
+                    <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+                    <span>Repeater</span>
+                  </button>
+                  <button
+                    id="btn-diff-current"
+                    class="btn btn-secondary btn-sm"
+                    title="Compare this request with another (Shortcut: D)"
+                    aria-label="Compare this request with another"
+                  >
+                    <i class="fa-solid fa-code-compare" aria-hidden="true"></i>
+                    <span>Diff</span>
+                  </button>
+                  <button
+                    id="btn-delete-current"
+                    class="btn btn-danger btn-sm btn-icon-only"
+                    title="Delete this request (Shortcut: Delete)"
+                    aria-label="Delete this request"
+                  >
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Meta info bar -->
+              <div
+                class="detail-meta-bar"
+                role="region"
+                aria-label="Request Metadata Summary"
+              >
+                <div class="meta-item">
+                  <i
+                    class="fa-solid fa-network-wired meta-icon"
+                    aria-hidden="true"
+                  ></i>
+                  <span class="meta-label">Client IP:</span>
+                  <span
+                    id="detail-ip"
+                    class="meta-value highlight-ip clickable-filter-val"
+                    title="Click to filter by this IP"
+                    >127.0.0.1</span
+                  >
+                </div>
+                <div class="meta-item">
+                  <i
+                    class="fa-regular fa-clock meta-icon"
+                    aria-hidden="true"
+                  ></i>
+                  <span class="meta-label">Time:</span>
+                  <span id="detail-timestamp" class="meta-value"
+                    >2026-08-18 21:10:00</span
+                  >
+                </div>
+                <div class="meta-item">
+                  <i
+                    class="fa-solid fa-weight-hanging meta-icon"
+                    aria-hidden="true"
+                  ></i>
+                  <span class="meta-label">Size:</span>
+                  <span id="detail-size" class="meta-value">0 B</span>
+                </div>
+                <div class="meta-item">
+                  <i class="fa-solid fa-tag meta-icon" aria-hidden="true"></i>
+                  <span class="meta-label">Type:</span>
+                  <span id="detail-content-type" class="meta-value">None</span>
+                </div>
+                <div class="meta-item">
+                  <i class="fa-solid fa-reply meta-icon" aria-hidden="true"></i>
+                  <span class="meta-label">Response:</span>
+                  <span
+                    id="detail-response-status"
+                    class="meta-value status-pill 200"
+                    >200 OK</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Inspector Tabs -->
+            <div
+              class="inspector-tabs"
+              role="tablist"
+              aria-label="Request inspection sections"
+            >
+              <button
+                type="button"
+                id="btn-tab-headers"
+                class="tab-btn active"
+                role="tab"
+                aria-selected="true"
+                aria-controls="tab-headers"
+                data-tab="tab-headers"
+                onclick="window.switchTab('tab-headers')"
+              >
+                <i
+                  class="fa-solid fa-list-check tab-icon"
+                  aria-hidden="true"
+                ></i>
+                <span>Headers</span>
+                <span
+                  id="tab-headers-count"
+                  class="tab-badge"
+                  aria-label="Headers count"
+                  >0</span
+                >
+              </button>
+              <button
+                type="button"
+                id="btn-tab-body"
+                class="tab-btn"
+                role="tab"
+                aria-selected="false"
+                aria-controls="tab-body"
+                data-tab="tab-body"
+                onclick="window.switchTab('tab-body')"
+              >
+                <i
+                  class="fa-solid fa-file-code tab-icon"
+                  aria-hidden="true"
+                ></i>
+                <span>Body / Payload</span>
+                <span
+                  id="tab-body-badge"
+                  class="tab-badge"
+                  aria-label="Body size"
+                  >0 B</span
+                >
+              </button>
+              <button
+                type="button"
+                id="btn-tab-query"
+                class="tab-btn"
+                role="tab"
+                aria-selected="false"
+                aria-controls="tab-query"
+                data-tab="tab-query"
+                onclick="window.switchTab('tab-query')"
+              >
+                <i
+                  class="fa-solid fa-circle-question tab-icon"
+                  aria-hidden="true"
+                ></i>
+                <span>Query Params</span>
+                <span
+                  id="tab-query-count"
+                  class="tab-badge"
+                  aria-label="Query parameters count"
+                  >0</span
+                >
+              </button>
+              <button
+                type="button"
+                id="btn-tab-client"
+                class="tab-btn"
+                role="tab"
+                aria-selected="false"
+                aria-controls="tab-client"
+                data-tab="tab-client"
+                onclick="window.switchTab('tab-client')"
+              >
+                <i
+                  class="fa-solid fa-crosshairs tab-icon"
+                  aria-hidden="true"
+                ></i>
+                <span>SSRF & Origin Analysis</span>
+              </button>
+              <button
+                type="button"
+                id="btn-tab-response"
+                class="tab-btn"
+                role="tab"
+                aria-selected="false"
+                aria-controls="tab-response"
+                data-tab="tab-response"
+                onclick="window.switchTab('tab-response')"
+              >
+                <i
+                  class="fa-solid fa-reply-all tab-icon"
+                  aria-hidden="true"
+                ></i>
+                <span>Response Delivered</span>
+              </button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="tab-content-container">
+              <!-- TAB: Headers -->
+              <div
+                id="tab-headers"
+                class="tab-pane active"
+                role="tabpanel"
+                aria-labelledby="btn-tab-headers"
+              >
+                <div class="pane-controls">
+                  <div class="table-search-wrap">
+                    <i
+                      class="fa-solid fa-filter search-icon-subtle"
+                      aria-hidden="true"
+                    ></i>
+                    <input
+                      type="text"
+                      id="headers-filter"
+                      class="table-filter-input"
+                      placeholder="Filter headers by key or value..."
+                      aria-label="Filter headers table"
+                    />
+                  </div>
+                  <div class="pane-action-buttons">
+                    <button
+                      id="btn-copy-all-headers"
+                      class="btn btn-secondary btn-sm"
+                      title="Copy all headers as JSON"
+                    >
+                      <i class="fa-regular fa-clone" aria-hidden="true"></i>
+                      <span>Copy JSON</span>
+                    </button>
+                    <button
+                      id="toggle-raw-headers"
+                      class="btn btn-secondary btn-sm"
+                    >
+                      <i class="fa-solid fa-code" aria-hidden="true"></i>
+                      <span>Show Raw Text</span>
+                    </button>
+                  </div>
+                </div>
+                <div id="headers-table-container">
+                  <table class="data-table" aria-label="Headers Table">
+                    <thead>
+                      <tr>
+                        <th style="width: 32%">Header Key</th>
+                        <th>Header Value</th>
+                        <th style="width: 44px"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="headers-table-body"></tbody>
+                  </table>
+                </div>
+                <pre id="headers-raw-container" class="code-block hidden"></pre>
+              </div>
+
+              <!-- TAB: Body -->
+              <div
+                id="tab-body"
+                class="tab-pane"
+                role="tabpanel"
+                aria-labelledby="btn-tab-body"
+                hidden
+              >
+                <div class="pane-controls">
+                  <div
+                    class="body-view-toggles"
+                    role="group"
+                    aria-label="Body format viewing modes"
+                  >
+                    <button
+                      class="view-btn active"
+                      data-body-view="formatted"
+                      aria-pressed="true"
+                    >
+                      <i
+                        class="fa-solid fa-wand-magic-sparkles"
+                        aria-hidden="true"
+                      ></i>
+                      <span>Formatted JSON</span>
+                    </button>
+                    <button
+                      class="view-btn"
+                      data-body-view="raw"
+                      aria-pressed="false"
+                    >
+                      <i class="fa-solid fa-align-left" aria-hidden="true"></i>
+                      <span>Raw Text</span>
+                    </button>
+                    <button
+                      class="view-btn"
+                      data-body-view="hex"
+                      aria-pressed="false"
+                    >
+                      <i class="fa-solid fa-hashtag" aria-hidden="true"></i>
+                      <span>Hex Dump</span>
+                    </button>
+                  </div>
+                  <div class="pane-action-buttons">
+                    <button
+                      id="copy-body-btn"
+                      class="btn btn-secondary btn-sm"
+                      title="Copy raw payload body"
+                    >
+                      <i class="fa-regular fa-clone" aria-hidden="true"></i>
+                      <span>Copy Payload</span>
+                    </button>
+                  </div>
+                </div>
+                <div id="body-content-area" class="body-display-area">
+                  <pre id="body-pre" class="code-block code-highlighted"></pre>
+                </div>
+              </div>
+
+              <!-- TAB: Query Params -->
+              <div
+                id="tab-query"
+                class="tab-pane"
+                role="tabpanel"
+                aria-labelledby="btn-tab-query"
+                hidden
+              >
+                <div id="query-empty" class="tab-empty-state">
+                  <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                  <span>No query parameters found in this request URL.</span>
+                </div>
+                <div id="query-table-container">
+                  <table class="data-table" aria-label="Query Parameters Table">
+                    <thead>
+                      <tr>
+                        <th style="width: 35%">Parameter</th>
+                        <th>Value</th>
+                        <th style="width: 44px"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="query-table-body"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- TAB: Client & SSRF Info -->
+              <div
+                id="tab-client"
+                class="tab-pane"
+                role="tabpanel"
+                aria-labelledby="btn-tab-client"
+                hidden
+              >
+                <div class="info-card-grid">
+                  <div class="info-card">
+                    <div class="info-title">
+                      <i
+                        class="fa-solid fa-globe info-icon"
+                        aria-hidden="true"
+                      ></i>
+                      <span>Remote Source IP</span>
+                    </div>
+                    <div
+                      id="client-ip-display"
+                      class="info-body-val highlight-ip clickable-filter-val"
+                      title="Click to filter by this IP"
+                    >
+                      127.0.0.1
+                    </div>
+                    <div id="client-ip-desc" class="info-hint">
+                      Direct socket client address or forwarded IP
+                    </div>
+                  </div>
+
+                  <div class="info-card">
+                    <div class="info-title">
+                      <i
+                        class="fa-solid fa-shield-halved info-icon"
+                        aria-hidden="true"
+                      ></i>
+                      <span>Protocol & Transport</span>
+                    </div>
+                    <div id="client-proto-display" class="info-body-val">
+                      HTTP/1.1
+                    </div>
+                    <div class="info-hint">Transport scheme & HTTP version</div>
+                  </div>
+
+                  <div class="info-card full-width">
+                    <div class="info-title">
+                      <i
+                        class="fa-solid fa-robot info-icon"
+                        aria-hidden="true"
+                      ></i>
+                      <span>User-Agent Header</span>
+                    </div>
+                    <div id="client-ua-display" class="info-body-code">
+                      curl/8.4.0
+                    </div>
+                  </div>
+
+                  <div class="info-card full-width">
+                    <div class="info-title">
+                      <i
+                        class="fa-solid fa-crosshairs info-icon"
+                        aria-hidden="true"
+                      ></i>
+                      <span>SSRF & Origin Analysis</span>
+                    </div>
+                    <div id="ssrf-indicators" class="info-body-tags">
+                      <span class="tag"
+                        ><i class="fa-solid fa-house-laptop"></i> Localhost
+                        Loopback</span
+                      >
+                    </div>
+                  </div>
+
+                  <div id="cf-edge-card" class="info-card full-width hidden">
+                    <div class="info-title">
+                      <i
+                        class="fa-brands fa-cloudflare info-icon"
+                        aria-hidden="true"
+                      ></i>
+                      <span>Cloudflare Edge Ray Metadata</span>
+                    </div>
+                    <div id="cf-edge-details" class="info-body-code"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB: Response Sent -->
+              <div
+                id="tab-response"
+                class="tab-pane"
+                role="tabpanel"
+                aria-labelledby="btn-tab-response"
+                hidden
+              >
+                <div class="response-sent-view">
+                  <div class="meta-item">
+                    <span class="meta-label">Status Code Sent:</span>
+                    <span
+                      id="resp-sent-status"
+                      class="meta-value status-pill 200"
+                      >200 OK</span
+                    >
+                  </div>
+                  <div class="meta-item">
+                    <span class="meta-label">Content-Type Sent:</span>
+                    <span id="resp-sent-type" class="meta-value"
+                      >application/json</span
+                    >
+                  </div>
+                  <div class="response-body-preview">
+                    <label class="meta-label"
+                      >Response Body Delivered to Client:</label
+                    >
+                    <pre id="resp-sent-body" class="code-block"></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <!-- Theme Footer with Mandatory Copyright -->
+      <footer class="theme-footer" role="contentinfo">
+        <div class="copyright">
+          <a
+            href="https://el-sbaei.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open Ahmed E. El-Sbaei website"
+          >
+            &copy; Copyright
+            <strong class="sitename">Ahmed E. El-Sbaei</strong>
+            All Rights Reserved
+          </a>
+        </div>
+      </footer>
+
+      <!-- MODAL: Send Test Request Probe -->
+      <div
+        id="modal-send-test"
+        class="modal-backdrop hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-test-title"
+      >
+        <div class="modal-dialog">
+          <div class="modal-header">
+            <div id="modal-test-title" class="modal-title">
+              <i
+                class="fa-solid fa-paper-plane modal-header-icon"
+                aria-hidden="true"
+              ></i>
+              <span>Send Test Request Probe</span>
+            </div>
+            <button
+              class="modal-close"
+              data-close-modal
+              aria-label="Close Test Request Modal"
+            >
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p class="modal-desc">
+              Select where you want to route the test probe and choose a payload
+              preset:
+            </p>
+
+            <!-- Destination Choice -->
+            <div class="form-group">
+              <label class="section-heading-label"
+                ><i
+                  class="fa-solid fa-location-crosshairs"
+                  aria-hidden="true"
+                ></i>
+                Select Target Destination</label
+              >
+              <div class="destination-options-grid">
+                <label
+                  class="destination-option-card active"
+                  data-dest-val="local"
+                >
+                  <input
+                    type="radio"
+                    name="test-destination"
+                    value="local"
+                    checked
+                  />
+                  <div class="dest-card-content">
+                    <div class="dest-card-title">
+                      <i class="fa-solid fa-laptop-code" aria-hidden="true"></i>
+                      <span>Localhost (127.0.0.1)</span>
+                    </div>
+                    <div class="dest-card-desc">
+                      Tests direct local loopback capture without internet
+                      access.
+                    </div>
+                  </div>
+                </label>
+
+                <label class="destination-option-card" data-dest-val="public">
+                  <input type="radio" name="test-destination" value="public" />
+                  <div class="dest-card-content">
+                    <div class="dest-card-title">
+                      <i class="fa-brands fa-cloudflare" aria-hidden="true"></i>
+                      <span>Public IP / Cloudflare</span>
+                    </div>
+                    <div id="dest-public-desc" class="dest-card-desc">
+                      Routes through the public internet via active Cloudflare
+                      tunnel.
+                    </div>
+                  </div>
+                </label>
+
+                <label class="destination-option-card" data-dest-val="lan">
+                  <input type="radio" name="test-destination" value="lan" />
+                  <div class="dest-card-content">
+                    <div class="dest-card-title">
+                      <i
+                        class="fa-solid fa-network-wired"
+                        aria-hidden="true"
+                      ></i>
+                      <span>Local LAN IP</span>
+                    </div>
+                    <div id="dest-lan-desc" class="dest-card-desc">
+                      Routes via your local network interface.
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Test Probe Preset Selection -->
+            <div class="form-group">
+              <label for="test-probe-preset" class="section-heading-label"
+                ><i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                Probe Payload Preset</label
+              >
+              <select id="test-probe-preset" class="form-control">
+                <option value="ssrf_internal">
+                  🎯 SSRF Internal Service Probe (POST /internal/admin-api)
+                </option>
+                <option value="ssrf_metadata">
+                  ☁️ Cloud Metadata Probe (GET /latest/meta-data/iam/)
+                </option>
+                <option value="ssrf_gcp">
+                  🌐 GCP Metadata Probe (GET /computeMetadata/v1/)
+                </option>
+                <option value="webhook_stripe">
+                  💳 Stripe Webhook Event (POST /webhook/stripe/payment)
+                </option>
+                <option value="auth_callback">
+                  🔐 OAuth2 Authorization Callback (GET /oauth/callback)
+                </option>
+                <option value="custom_json">
+                  📦 Generic JSON Webhook (POST /capture)
+                </option>
+              </select>
+            </div>
+
+            <!-- Target URL preview -->
+            <div class="form-group">
+              <label class="section-heading-label"
+                ><i class="fa-solid fa-link" aria-hidden="true"></i> Target URL
+                Preview</label
+              >
+              <input
+                type="text"
+                id="test-target-preview"
+                class="form-control code-editor"
+                readonly
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-close-modal>Cancel</button>
+            <button id="btn-execute-send-test" class="btn btn-primary">
+              <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+              <span>Dispatch Test Request</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: Mock Response Config -->
+      <div
+        id="modal-response-config"
+        class="modal-backdrop hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-config-title"
+      >
+        <div class="modal-dialog">
+          <div class="modal-header">
+            <div id="modal-config-title" class="modal-title">
+              <i
+                class="fa-solid fa-sliders modal-header-icon"
+                aria-hidden="true"
+              ></i>
+              <span>Mock HTTP Response Configuration</span>
+            </div>
+            <button
+              class="modal-close"
+              data-close-modal
+              aria-label="Close Mock Response Modal"
+            >
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p class="modal-desc">
+              Configure what elsba3ei Webhook sends back whenever an incoming
+              request hits your webhook URL.
+            </p>
+
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="cfg-status-code">HTTP Status Code</label>
+                <select id="cfg-status-code" class="form-control">
+                  <option value="200">200 OK</option>
+                  <option value="201">201 Created</option>
+                  <option value="204">204 No Content</option>
+                  <option value="301">301 Moved Permanently (Redirect)</option>
+                  <option value="302">302 Found (Redirect)</option>
+                  <option value="400">400 Bad Request</option>
+                  <option value="401">401 Unauthorized</option>
+                  <option value="403">403 Forbidden</option>
+                  <option value="404">404 Not Found</option>
+                  <option value="500">500 Internal Server Error</option>
+                  <option value="502">502 Bad Gateway</option>
+                  <option value="503">503 Service Unavailable</option>
+                </select>
+              </div>
+              <div class="form-group flex-1">
+                <label for="cfg-content-type">Content-Type</label>
+                <select id="cfg-content-type" class="form-control">
+                  <option value="application/json">application/json</option>
+                  <option value="text/plain">text/plain</option>
+                  <option value="text/html">text/html</option>
+                  <option value="application/xml">application/xml</option>
+                  <option value="application/javascript">
+                    application/javascript
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="cfg-delay"
+                >Artificial Response Delay (milliseconds)</label
+              >
+              <input
+                type="number"
+                id="cfg-delay"
+                class="form-control"
+                min="0"
+                max="60000"
+                step="100"
+                placeholder="0 (instant)"
+              />
+              <span class="field-hint"
+                >Simulate slow backend responses or timeouts for testing SSRF /
+                background workers.</span
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="cfg-body">Response Body</label>
+              <textarea
+                id="cfg-body"
+                class="form-control code-editor"
+                rows="5"
+                placeholder='{"status": "ok"}'
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="cfg-headers"
+                >Custom Response Headers (JSON Key-Value)</label
+              >
+              <textarea
+                id="cfg-headers"
+                class="form-control code-editor"
+                rows="3"
+                placeholder='{"Server": "elsba3ei-Server", "X-Custom": "123"}'
+              ></textarea>
+            </div>
+
+            <div class="form-checkbox">
+              <input type="checkbox" id="cfg-cors" checked />
+              <label for="cfg-cors"
+                >Enable permissive CORS headers (<code
+                  >Access-Control-Allow-Origin: *</code
+                >)</label
+              >
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-close-modal>Cancel</button>
+            <button id="btn-save-config" class="btn btn-primary">
+              <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+              <span>Save Configuration</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: Repeater / Resend -->
+      <div
+        id="modal-repeater"
+        class="modal-backdrop hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-repeater-title"
+      >
+        <div class="modal-dialog modal-lg">
+          <div class="modal-header">
+            <div id="modal-repeater-title" class="modal-title">
+              <i
+                class="fa-solid fa-arrows-rotate modal-header-icon"
+                aria-hidden="true"
+              ></i>
+              <span>Request Repeater (Re-send / Modify)</span>
+            </div>
+            <button
+              class="modal-close"
+              data-close-modal
+              aria-label="Close Repeater Modal"
+            >
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-group" style="width: 130px">
+                <label for="rep-method">Method</label>
+                <select id="rep-method" class="form-control">
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="DELETE">DELETE</option>
+                  <option value="PATCH">PATCH</option>
+                  <option value="HEAD">HEAD</option>
+                  <option value="OPTIONS">OPTIONS</option>
+                </select>
+              </div>
+              <div class="form-group flex-1">
+                <label for="rep-url">Target URL</label>
+                <input
+                  type="text"
+                  id="rep-url"
+                  class="form-control"
+                  placeholder="http://localhost:4000/capture"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="rep-headers">Headers (JSON Key-Value)</label>
+              <textarea
+                id="rep-headers"
+                class="form-control code-editor"
+                rows="3"
+                placeholder='{"Content-Type": "application/json"}'
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="rep-body">Body</label>
+              <textarea
+                id="rep-body"
+                class="form-control code-editor"
+                rows="4"
+                placeholder="Request body..."
+              ></textarea>
+            </div>
+
+            <div id="rep-response-section" class="rep-response hidden">
+              <label class="meta-label">Server Response:</label>
+              <div id="rep-resp-status" class="status-pill 200">Status: -</div>
+              <pre id="rep-resp-body" class="code-block mt-2"></pre>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-close-modal>Close</button>
+            <button id="btn-send-replay" class="btn btn-primary">
+              <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+              <span>Send Request</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: Request Diff / Comparison -->
+      <div
+        id="modal-compare"
+        class="modal-backdrop hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-compare-title"
+      >
+        <div class="modal-dialog modal-xl">
+          <div class="modal-header">
+            <div id="modal-compare-title" class="modal-title">
+              <i
+                class="fa-solid fa-code-compare modal-header-icon"
+                aria-hidden="true"
+              ></i>
+              <span>Side-by-Side Request Diff Inspector</span>
+            </div>
+            <button
+              class="modal-close"
+              data-close-modal
+              aria-label="Close Diff Modal"
+            >
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p class="modal-desc">
+              Select two recorded requests to inspect differences in HTTP
+              method, paths, headers, payload body, and client network origins.
+            </p>
+
+            <!-- Request Selectors -->
+            <div class="diff-selectors-row">
+              <div class="diff-selector-col">
+                <label for="diff-select-a" class="diff-col-label"
+                  ><span class="diff-tag diff-tag-a"
+                    >Request A (Base)</span
+                  ></label
+                >
+                <select
+                  id="diff-select-a"
+                  class="form-control diff-request-select"
+                ></select>
+              </div>
+              <div class="diff-swap-col">
+                <button
+                  id="btn-diff-swap"
+                  class="btn btn-icon"
+                  title="Swap Request A and Request B"
+                  aria-label="Swap requests"
+                >
+                  <i
+                    class="fa-solid fa-arrow-right-arrow-left"
+                    aria-hidden="true"
+                  ></i>
+                </button>
+              </div>
+              <div class="diff-selector-col">
+                <label for="diff-select-b" class="diff-col-label"
+                  ><span class="diff-tag diff-tag-b"
+                    >Request B (Comparison)</span
+                  ></label
+                >
+                <select
+                  id="diff-select-b"
+                  class="form-control diff-request-select"
+                ></select>
+              </div>
+            </div>
+
+            <!-- Diff Results Area -->
+            <div id="diff-results-container" class="diff-results-container">
+              <!-- Diff Summary Banner -->
+              <div id="diff-summary-banner" class="diff-summary-badge">
+                <span id="diff-summary-text">Select requests to compare</span>
+              </div>
+
+              <!-- Side by Side Diff Grid -->
+              <div class="diff-split-grid">
+                <!-- Column A -->
+                <div class="diff-pane-card">
+                  <div class="diff-pane-header">
+                    <div id="diff-header-a" class="diff-pane-title">
+                      Request A
+                    </div>
+                    <button
+                      id="btn-copy-diff-a"
+                      class="btn-icon-subtle"
+                      title="Copy Request A data"
+                      aria-label="Copy Request A"
+                    >
+                      <i class="fa-regular fa-clone" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <div id="diff-content-a" class="diff-pane-body"></div>
+                </div>
+
+                <!-- Column B -->
+                <div class="diff-pane-card">
+                  <div class="diff-pane-header">
+                    <div id="diff-header-b" class="diff-pane-title">
+                      Request B
+                    </div>
+                    <button
+                      id="btn-copy-diff-b"
+                      class="btn-icon-subtle"
+                      title="Copy Request B data"
+                      aria-label="Copy Request B"
+                    >
+                      <i class="fa-regular fa-clone" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <div id="diff-content-b" class="diff-pane-body"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-close-modal>Close</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: Keyboard Shortcuts Help -->
+      <div
+        id="modal-shortcuts"
+        class="modal-backdrop hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-shortcuts-title"
+      >
+        <div class="modal-dialog">
+          <div class="modal-header">
+            <div id="modal-shortcuts-title" class="modal-title">
+              <i
+                class="fa-solid fa-keyboard modal-header-icon"
+                aria-hidden="true"
+              ></i>
+              <span>Keyboard Shortcuts</span>
+            </div>
+            <button
+              class="modal-close"
+              data-close-modal
+              aria-label="Close Shortcuts Help Modal"
+            >
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="shortcuts-grid">
+              <div class="shortcut-row">
+                <span class="shortcut-desc">Focus Search Bar</span>
+                <div class="shortcut-keys">
+                  <kbd>Ctrl</kbd> + <kbd>K</kbd> or <kbd>/</kbd>
+                </div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc">Next Request</span>
+                <div class="shortcut-keys"><kbd>J</kbd> or <kbd>↓</kbd></div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc">Previous Request</span>
+                <div class="shortcut-keys"><kbd>K</kbd> or <kbd>↑</kbd></div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc">Pause / Resume Stream</span>
+                <div class="shortcut-keys">
+                  <kbd>Space</kbd> or <kbd>P</kbd>
+                </div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc">Send Test Request Probe</span>
+                <div class="shortcut-keys"><kbd>T</kbd></div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc">Open in Repeater</span>
+                <div class="shortcut-keys"><kbd>R</kbd></div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc">Side-by-Side Diff / Compare</span>
+                <div class="shortcut-keys"><kbd>D</kbd></div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc">Export Requests JSON / HAR</span>
+                <div class="shortcut-keys"><kbd>E</kbd></div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc">Copy Active Webhook URL</span>
+                <div class="shortcut-keys"><kbd>C</kbd></div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc"
+                  >Switch Tabs (1: Headers, 2: Body, 3: Query, 4: SSRF, 5:
+                  Resp)</span
+                >
+                <div class="shortcut-keys"><kbd>1</kbd> - <kbd>5</kbd></div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc"
+                  >Delete Selected Request (with Undo)</span
+                >
+                <div class="shortcut-keys"><kbd>Delete</kbd></div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc">Open Mock Response Settings</span>
+                <div class="shortcut-keys"><kbd>M</kbd></div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc">Toggle Audio Alerts</span>
+                <div class="shortcut-keys"><kbd>S</kbd></div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc">Clear All Requests</span>
+                <div class="shortcut-keys"><kbd>Alt</kbd> + <kbd>C</kbd></div>
+              </div>
+              <div class="shortcut-row">
+                <span class="shortcut-desc">Close Modal / Dismiss Search</span>
+                <div class="shortcut-keys"><kbd>Esc</kbd></div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary" data-close-modal>Got it</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stackable Toast Notifications Container -->
+      <div
+        id="toast-container"
+        class="toast-container"
+        role="status"
+        aria-live="polite"
+        aria-atomic="false"
+      ></div>
+    </div>
+
+    <script src="/public/app.js"></script>
+  </body>
+</html>

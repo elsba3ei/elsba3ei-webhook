@@ -1,0 +1,25 @@
+{
+  "name": "elsba3ei-webhook",
+  "version": "1.0.0",
+  "description": "High-performance real-time Webhook & SSRF Request Inspector with Cloudflare Quick Tunnel support and SSE streaming",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "start:tunnel": "node server.js --tunnel",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "webhook",
+    "ssrf-tester",
+    "request-inspector",
+    "http-logger",
+    "cloudflare-tunnel",
+    "burp-collaborator-alternative",
+    "webhook-site-alternative",
+    "oob-interaction",
+    "mcp-server"
+  ],
+  "author": "elsba3ei",
+  "license": "MIT"
+}
