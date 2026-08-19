@@ -34,28 +34,39 @@
 
 ## 🚀 How to Run
 
-### Option A: 1-Click Launch with Cloudflare (Recommended on Windows)
+### 🪟 Windows (1-Click or PowerShell)
+- **1-Click**: Double-click [`start server.bat`](file:///g:/Playing/elsba3ei%20webhook/start%20server.bat). It boots the server, creates the Cloudflare tunnel, and opens your browser.
+- **PowerShell**:
+  ```powershell
+  # Start with Cloudflare Public Tunnel
+  node server.js --tunnel
 
-Double-click [`start server.bat`](file:///g:/Playing/elsba3ei%20webhook/start%20server.bat) in this folder.
+  # Or start locally on custom port
+  node server.js 8080
+  ```
 
-- Launches the Node.js server.
-- Starts a temporary Cloudflare Quick Tunnel.
-- Opens your default web browser automatically at `http://localhost:4000`.
+### 🐧 Linux / Ubuntu & Debian
+```bash
+# 1. Install Node.js if needed
+sudo apt update && sudo apt install -y nodejs npm
 
-### Option B: Terminal / PowerShell
+# 2. Make start script executable
+chmod +x start.sh
 
-```powershell
-# Default local server on port 4000
-node server.js
+# 3. Start with Cloudflare Public Tunnel
+./start.sh --tunnel
 
-# Auto-start Cloudflare Public Tunnel
-node server.js --tunnel
+# Or start on a custom port
+./start.sh 8080
+```
 
-# Run on custom port (e.g. 8080)
-node server.js 8080
+### 🍏 macOS
+```bash
+# 1. Make start script executable
+chmod +x start.sh
 
-# Run on custom port with tunnel
-node server.js 8080 --tunnel
+# 2. Run with tunnel
+./start.sh --tunnel
 ```
 
 ---
