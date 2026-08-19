@@ -100,6 +100,15 @@ node server.js 8080 --tunnel
 
 ---
 
+## 👨‍💻 Author & Developer
+
+Developed with ❤️ by **Ahmed E. El-Sbaei**
+
+- 🌐 **LinkedIn**: [Ahmed E. El-Sbaei](https://www.linkedin.com/in/elsba3ei)
+- 🐙 **GitHub**: [@elsba3ei](https://github.com/elsba3ei)
+
+---
+
 ## 📄 License
 
-MIT License — Copyright (c) 2026 **elsba3ei**.
+Distributed under the **MIT License** — © 2026 **Ahmed E. El-Sbaei**. See [`LICENSE`](file:///G:/Playing/elsba3ei%20webhook/LICENSE) for details.
