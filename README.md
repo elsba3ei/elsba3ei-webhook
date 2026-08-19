@@ -1,42 +1,65 @@
-# 🎯 elsba3ei Webhook & SSRF Inspector (Web Dashboard & Node.js Server)
+# elsba3ei Webhook & SSRF Inspector (Web Dashboard & Node.js Server)
 
-<p align="center">
-  <b>A lightweight, ultra-fast Webhook.site & Burp Collaborator Alternative with real-time SSE streaming, Cloudflare Quick Tunnel support, body decoders, dynamic mock responses, and built-in request repeater.</b>
-</p>
+A lightweight, ultra-fast Webhook.site & Burp Collaborator Alternative with real-time SSE streaming, Cloudflare Quick Tunnel support, body decoders, dynamic mock responses, and built-in request repeater.
 
 ---
 
-## ⚡ Highlights & Features
+## Highlights & Features
 
-- 🌐 **Built-in Cloudflare Quick Tunnel**: 1-Click temporary public HTTPS link (`https://xxxx.trycloudflare.com/capture`) for external SSRF testing and public webhook callbacks with **zero configuration and no account needed**!
-- 🚀 **Zero External NPM Packages**: Built entirely on native Node.js standard libraries (`http`, `crypto`, `fs`, `path`, `os`, `child_process`). Runs immediately!
-- 🔴 **Real-Time Live Updates**: Instant push stream via Server-Sent Events (SSE) with live connection status indicators.
-- 🔍 **Deep Request Inspection**:
-  - Full HTTP Headers & Raw Headers with instant fuzzy search filtering
-  - Formatted JSON / Raw Text / URL-Encoded Form / Hex Dump / Base64 for Request Bodies
-  - Query parameters breakdown table
-  - Accurate Client IP resolution (`CF-Connecting-IP`, `X-Forwarded-For`, `X-Real-IP`, `True-Client-IP`)
-  - SSRF origin indicators (Localhost, Private LAN, External IP)
-- ⚙️ **Customizable Mock Response Engine**:
-  - Change Status Codes (200, 201, 301, 302, 404, 500, etc.)
-  - Change Content-Type (`application/json`, `text/html`, `text/xml`, `text/plain`)
-  - Custom Response Body & Custom Headers (e.g. redirect `Location`)
-  - Artificial Response Delay (ms) to simulate slow backends and test client timeout handling
-  - Automatic CORS handling (`Access-Control-Allow-Origin: *`)
-- 🔁 **Built-in Request Repeater**: Resend and modify any captured request on the fly to external targets or local servers.
-- 📋 **1-Click Export Tools**: Copy any request as **cURL**, **JavaScript `fetch()`**, **Raw HTTP/1.1**, or Export all captured logs to a **JSON** file.
-- ⌨️ **Keyboard Shortcuts**:
+- **Built-in Cloudflare Quick Tunnel**: 1-Click temporary public HTTPS link (`https://xxxx.trycloudflare.com/capture`) for external SSRF testing and public webhook callbacks with zero configuration and no account needed.
+- **Zero External NPM Packages**: Built entirely on native Node.js standard libraries (`http`, `crypto`, `fs`, `path`, `os`, `child_process`). Runs immediately.
+- **Real-Time Live Updates**: Instant push stream via Server-Sent Events (SSE) with live connection status indicators.
+- **Deep Request Inspection**:
+  - Full HTTP Headers & Raw Headers with instant fuzzy search filtering.
+  - Formatted JSON / Raw Text / URL-Encoded Form / Hex Dump / Base64 for Request Bodies.
+  - Query parameters breakdown table.
+  - Accurate Client IP resolution (`CF-Connecting-IP`, `X-Forwarded-For`, `X-Real-IP`, `True-Client-IP`).
+  - SSRF origin indicators (Localhost, Private LAN, External IP).
+- **Customizable Mock Response Engine**:
+  - Change Status Codes (200, 201, 301, 302, 404, 500, etc.).
+  - Change Content-Type (`application/json`, `text/html`, `text/xml`, `text/plain`).
+  - Custom Response Body & Custom Headers (e.g. redirect `Location`).
+  - Artificial Response Delay (ms) to simulate slow backends and test client timeout handling.
+  - Automatic CORS handling (`Access-Control-Allow-Origin: *`).
+- **Built-in Request Repeater**: Resend and modify any captured request on the fly to external targets or local servers.
+- **1-Click Export Tools**: Copy any request as cURL, JavaScript `fetch()`, Raw HTTP/1.1, or Export all captured logs to a JSON file.
+- **Keyboard Shortcuts**:
   - `Space` or `P`: Pause / Resume live feed
   - `/`: Focus search box
   - `Esc`: Clear search / close modal
 
 ---
 
-## 🚀 How to Run
+## System Requirements & Prerequisites
 
-### 🪟 Windows (1-Click or PowerShell)
-- **1-Click**: Double-click [`start server.bat`](file:///g:/Playing/elsba3ei%20webhook/start%20server.bat). It boots the server, creates the Cloudflare tunnel, and opens your browser.
-- **PowerShell**:
+| Requirement | Version / Details |
+| :--- | :--- |
+| **Node.js** | Node.js 18.0 or higher (runs out-of-the-box with 0 npm dependencies) |
+| **Cloudflared CLI** *(Optional)* | Required only if you want temporary public HTTPS tunnels |
+
+### Installing Cloudflared CLI (Optional for Public Tunnels):
+
+- **Windows**:
+  ```powershell
+  winget install --id Cloudflare.cloudflared
+  ```
+- **Linux (Ubuntu / Debian)**:
+  ```bash
+  curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+  sudo dpkg -i cloudflared.deb
+  ```
+- **macOS**:
+  ```bash
+  brew install cloudflared
+  ```
+
+---
+
+## How to Run
+
+### Windows (1-Click or PowerShell)
+- **1-Click**: Double-click [`start server.bat`](file:///G:/Playing/elsba3ei%20webhook/start%20server.bat) in this folder. It boots the server, creates the Cloudflare tunnel, and opens your browser.
+- **PowerShell / Terminal**:
   ```powershell
   # Start with Cloudflare Public Tunnel
   node server.js --tunnel
@@ -45,33 +68,29 @@
   node server.js 8080
   ```
 
-### 🐧 Linux / Ubuntu & Debian
+### Linux (Ubuntu / Debian)
 ```bash
-# 1. Install Node.js if needed
-sudo apt update && sudo apt install -y nodejs npm
-
-# 2. Make start script executable
+# 1. Make start script executable
 chmod +x start.sh
 
-# 3. Start with Cloudflare Public Tunnel
+# 2. Start with Cloudflare Public Tunnel
 ./start.sh --tunnel
 
 # Or start on a custom port
 ./start.sh 8080
 ```
 
-### 🍏 macOS
+### macOS
 ```bash
-# 1. Make start script executable
 chmod +x start.sh
-
-# 2. Run with tunnel
 ./start.sh --tunnel
 ```
 
+> **Access UI**: Open `http://localhost:4000` (or `http://localhost:4000/dashboard`) in your web browser.
+
 ---
 
-## 💡 How It Works
+## How It Works
 
 1. **Boot**: The server boots on `http://localhost:4000` (or your configured port).
 2. **Tunnel Generation**: If `--tunnel` is enabled, `cloudflared` automatically provisions a secure public HTTPS link (e.g. `https://random-name.trycloudflare.com/capture`).
@@ -81,46 +100,39 @@ chmod +x start.sh
 
 ---
 
-## 📡 REST Endpoints Reference
+## REST Endpoints Reference
 
-| Route                       | Method   | Description                                                                                                    |
-| :-------------------------- | :------- | :------------------------------------------------------------------------------------------------------------- |
-| `/`                         | `GET`    | Serves the web dashboard (for local browser sessions).                                                         |
-| `/dashboard`                | `GET`    | Dedicated web dashboard interface.                                                                             |
-| `/public/*`                 | `GET`    | Static assets (CSS, JS, icons).                                                                                |
-| `/api/events`               | `GET`    | Server-Sent Events stream for live requests and tunnel updates.                                                |
-| `/api/requests`             | `GET`    | Returns list of all captured requests in JSON.                                                                 |
-| `/api/requests`             | `DELETE` | Clears all captured requests.                                                                                  |
-| `/api/requests/:id`         | `GET`    | Returns details for a specific request ID.                                                                     |
-| `/api/requests/:id`         | `DELETE` | Deletes a single request record.                                                                               |
-| `/api/config`               | `GET`    | Returns current mock response configuration.                                                                   |
-| `/api/config`               | `POST`   | Updates mock response configuration (`statusCode`, `contentType`, `responseBody`, `delayMs`, `customHeaders`). |
-| `/api/config/reset`         | `POST`   | Resets mock response configuration back to defaults.                                                           |
-| `/api/tunnel/status`        | `GET`    | Returns active Cloudflare tunnel status and public URL.                                                        |
-| `/api/tunnel/start`         | `POST`   | Starts the Cloudflare Quick Tunnel.                                                                            |
-| `/api/tunnel/stop`          | `POST`   | Stops the active Cloudflare tunnel.                                                                            |
-| `/api/replay`               | `POST`   | Sends a custom HTTP request to an external target.                                                             |
-| `/capture` (or any subpath) | `ANY`    | Captures incoming webhook / SSRF request.                                                                      |
-
----
-
-## 🔒 Security Best Practice
-
-> [!WARNING]
-> Captured data may include sensitive headers or authentication tokens sent by third-party services. Use this tool only in authorized testing environments.
+| Route | Method | Description |
+| :--- | :--- | :--- |
+| `/` | `GET` | Serves the web dashboard (for local browser sessions). |
+| `/dashboard` | `GET` | Dedicated web dashboard interface. |
+| `/public/*` | `GET` | Static assets (CSS, JS, icons). |
+| `/api/events` | `GET` | Server-Sent Events stream for live requests and tunnel updates. |
+| `/api/requests` | `GET` | Returns list of all captured requests in JSON. |
+| `/api/requests` | `DELETE` | Clears all captured requests. |
+| `/api/requests/:id`| `GET` | Returns details for a specific request ID. |
+| `/api/requests/:id`| `DELETE` | Deletes a single request record. |
+| `/api/config` | `GET` | Returns current mock response configuration. |
+| `/api/config` | `POST` | Updates mock response configuration (`statusCode`, `contentType`, `responseBody`, `delayMs`, `customHeaders`). |
+| `/api/config/reset` | `POST` | Resets mock response configuration back to defaults. |
+| `/api/tunnel/status`| `GET` | Returns active Cloudflare tunnel status and public URL. |
+| `/api/tunnel/start` | `POST` | Starts the Cloudflare Quick Tunnel. |
+| `/api/tunnel/stop` | `POST` | Stops the active Cloudflare tunnel. |
+| `/api/replay` | `POST` | Sends a custom HTTP request to an external target. |
+| `/capture` (or any subpath) | `ANY` | Captures incoming webhook / SSRF request. |
 
 ---
 
-## 👨‍💻 Author & Developer
+## Author & Developer
 
-Developed with ❤️ by **Ahmed E. El-Sbaei**
+Developed by **Ahmed E. El-Sbaei**
 
-- 🌐 **LinkedIn**: [Ahmed E. El-Sbaei](https://www.linkedin.com/in/elsba3ei)
-- 🐙 **GitHub**: [@elsba3ei](https://github.com/elsba3ei)
+- **LinkedIn**: [Ahmed E. El-Sbaei](https://www.linkedin.com/in/elsba3ei)
+- **GitHub**: [@elsba3ei](https://github.com/elsba3ei)
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the **MIT License** — © 2026 **elsba3ei**.
 
