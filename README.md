@@ -100,11 +100,19 @@ node server.js 8080 --tunnel
 
 ---
 
+## 👨‍💻 Author & Developer
+
+Developed with ❤️ by **Ahmed E. El-Sbaei**
+
+- 🌐 **LinkedIn**: [Ahmed E. El-Sbaei](https://www.linkedin.com/in/elsba3ei)
+- 🐙 **GitHub**: [@elsba3ei](https://github.com/elsba3ei)
+
+---
+
 ## 📄 License
 
-Distributed under the **MIT License**.
+Distributed under the **MIT License** — © 2026 **elsba3ei**.
 
 <div align="center">
-  Developed by <b>Ahmed E. El-Sbaei</b> — © 2026 Ahmed E. El-Sbaei<br>
-  <a href="http://linkedin.com/in/elsba3ei">http://linkedin.com/in/elsba3ei</a>
+  Developed by <b>Ahmed E. El-Sbaei</b> — © 2026 <b>elsba3ei</b> • <a href="https://www.linkedin.com/in/elsba3ei">LinkedIn</a> • <a href="https://github.com/elsba3ei">GitHub</a>
 </div>
