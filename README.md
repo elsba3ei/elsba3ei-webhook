@@ -4,6 +4,12 @@ A lightweight, ultra-fast Webhook.site & Burp Collaborator Alternative with real
 
 ---
 
+## Preview
+
+![elsba3ei Webhook Dashboard](assets/dashboard-preview.png)
+
+---
+
 ## Highlights & Features
 
 - **Built-in Cloudflare Quick Tunnel**: 1-Click temporary public HTTPS link (`https://xxxx.trycloudflare.com/capture`) for external SSRF testing and public webhook callbacks with zero configuration and no account needed.
@@ -15,17 +21,28 @@ A lightweight, ultra-fast Webhook.site & Burp Collaborator Alternative with real
   - Query parameters breakdown table.
   - Accurate Client IP resolution (`CF-Connecting-IP`, `X-Forwarded-For`, `X-Real-IP`, `True-Client-IP`).
   - SSRF origin indicators (Localhost, Private LAN, External IP).
+
+![Body & Payload Inspection](assets/body-payload-view.png)
+
 - **Customizable Mock Response Engine**:
   - Change Status Codes (200, 201, 301, 302, 404, 500, etc.).
   - Change Content-Type (`application/json`, `text/html`, `text/xml`, `text/plain`).
   - Custom Response Body & Custom Headers (e.g. redirect `Location`).
   - Artificial Response Delay (ms) to simulate slow backends and test client timeout handling.
   - Automatic CORS handling (`Access-Control-Allow-Origin: *`).
+
+![Mock HTTP Response Engine](assets/mock-response-engine.png)
+
 - **Built-in Request Repeater**: Resend and modify any captured request on the fly to external targets or local servers.
-- **1-Click Export Tools**: Copy any request as cURL, JavaScript `fetch()`, Raw HTTP/1.1, or Export all captured logs to a JSON file.
+- **1-Click Export Tools**: Copy any request as cURL, JavaScript `fetch()`, Python `requests`, PowerShell `Invoke-RestMethod`, Raw HTTP/1.1, or Export all captured logs to a JSON file.
+- **Side-by-Side Diff Inspector**: Compare two captured requests side-by-side to detect payload or header divergences.
 - **Keyboard Shortcuts**:
   - `Space` or `P`: Pause / Resume live feed
-  - `/`: Focus search box
+  - `/` or `Ctrl+K`: Focus search box
+  - `T`: Open test probe modal
+  - `M`: Open Mock Response configuration
+  - `D`: Open Diff comparison modal
+  - `C`: Copy active Webhook URL
   - `Esc`: Clear search / close modal
 
 ---
@@ -58,8 +75,10 @@ A lightweight, ultra-fast Webhook.site & Burp Collaborator Alternative with real
 ## How to Run
 
 ### Windows (1-Click or PowerShell)
+
 - **1-Click**: Double-click [`start server.bat`](file:///G:/Playing/elsba3ei%20webhook/start%20server.bat) in this folder. It boots the server, creates the Cloudflare tunnel, and opens your browser.
 - **PowerShell / Terminal**:
+
   ```powershell
   # Start with Cloudflare Public Tunnel
   node server.js --tunnel
@@ -69,6 +88,7 @@ A lightweight, ultra-fast Webhook.site & Burp Collaborator Alternative with real
   ```
 
 ### Linux (Ubuntu / Debian)
+
 ```bash
 # 1. Make start script executable
 chmod +x start.sh
@@ -81,6 +101,7 @@ chmod +x start.sh
 ```
 
 ### macOS
+
 ```bash
 chmod +x start.sh
 ./start.sh --tunnel
@@ -90,10 +111,24 @@ chmod +x start.sh
 
 ---
 
+## Automated Testing
+
+The project includes an automated end-to-end test suite built with native Node.js assertions testing static routing, webhook body parsers, API endpoints, mock response engine, and system telemetry:
+
+```bash
+npm test
+```
+*Or directly via Node.js:*
+```bash
+node test.js
+```
+
+---
+
 ## How It Works
 
 1. **Boot**: The server boots on `http://localhost:4000` (or your configured port).
-2. **Tunnel Generation**: If `--tunnel` is enabled, `cloudflared` automatically provisions a secure public HTTPS link (e.g. `https://random-name.trycloudflare.com/capture`).
+2. **Tunnel Generation**: If `--tunnel` is enabled, `cloudflared` automatically provisions a secure public HTTPS link (e.g. `https://xxxx.trycloudflare.com/capture`).
 3. **Capture**: Any external web service, webhook provider (Stripe, GitHub, PayPal), or SSRF target making an HTTP/HTTPS request to your Cloudflare or Local URL will be captured.
 4. **Live Push**: The server parses headers, query parameters, and body payloads, and streams the event live over SSE to your browser dashboard.
 5. **Dynamic Mocking**: The server immediately responds to the caller with the configured status code, custom headers, and body defined in the Mock Response panel.
@@ -110,14 +145,15 @@ chmod +x start.sh
 | `/api/events` | `GET` | Server-Sent Events stream for live requests and tunnel updates. |
 | `/api/requests` | `GET` | Returns list of all captured requests in JSON. |
 | `/api/requests` | `DELETE` | Clears all captured requests. |
-| `/api/requests/:id`| `GET` | Returns details for a specific request ID. |
-| `/api/requests/:id`| `DELETE` | Deletes a single request record. |
+| `/api/requests/:id` | `GET` | Returns details for a specific request ID. |
+| `/api/requests/:id` | `DELETE` | Deletes a single request record. |
 | `/api/config` | `GET` | Returns current mock response configuration. |
 | `/api/config` | `POST` | Updates mock response configuration (`statusCode`, `contentType`, `responseBody`, `delayMs`, `customHeaders`). |
 | `/api/config/reset` | `POST` | Resets mock response configuration back to defaults. |
-| `/api/tunnel/status`| `GET` | Returns active Cloudflare tunnel status and public URL. |
+| `/api/tunnel/status` | `GET` | Returns active Cloudflare tunnel status and public URL. |
 | `/api/tunnel/start` | `POST` | Starts the Cloudflare Quick Tunnel. |
 | `/api/tunnel/stop` | `POST` | Stops the active Cloudflare tunnel. |
+| `/api/system` | `GET` | Returns server telemetry, active ports, client count, and network IPs. |
 | `/api/replay` | `POST` | Sends a custom HTTP request to an external target. |
 | `/capture` (or any subpath) | `ANY` | Captures incoming webhook / SSRF request. |
 

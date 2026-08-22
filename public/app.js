@@ -2037,6 +2037,25 @@ function setupEventListeners() {
 
   btnSaveConfig?.addEventListener("click", saveMockConfig);
   btnSendReplay?.addEventListener("click", executeReplay);
+
+  // URL query parameter deep-linking for screenshots and direct navigation
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetTab = urlParams.get("tab");
+  if (targetTab) {
+    setTimeout(() => {
+      switchTab(`tab-${targetTab}`);
+    }, 250);
+  }
+  const targetModal = urlParams.get("modal");
+  if (targetModal === "mock") {
+    setTimeout(() => {
+      if (modalResponseConfig) openModal(modalResponseConfig);
+    }, 350);
+  } else if (targetModal === "repeater") {
+    setTimeout(() => {
+      openRepeaterModal();
+    }, 350);
+  }
 }
 
 // Mock HTTP Config

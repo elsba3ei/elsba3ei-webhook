@@ -571,6 +571,28 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  if (pathname === "/api/config/reset" && req.method === "POST") {
+    mockConfig = {
+      statusCode: 200,
+      contentType: "application/json",
+      responseBody: JSON.stringify(
+        { status: "ok", message: "Captured by elsba3ei Webhook" },
+        null,
+        2,
+      ),
+      customHeaders: {
+        Server: "elsba3ei-Webhook/1.0",
+        "X-Powered-By": "elsba3ei-Inspector",
+      },
+      delayMs: 0,
+      autoCors: true,
+    };
+    broadcastSSE("config_updated", mockConfig);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: true, config: mockConfig }));
+    return;
+  }
+
   if (pathname === "/api/system" && req.method === "GET") {
     const localIPs = getLocalNetworkIPs();
     const systemInfo = {
